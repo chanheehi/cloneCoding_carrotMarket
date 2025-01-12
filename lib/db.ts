@@ -9,6 +9,7 @@ async function test() {
     },
   });
   console.log(user);
+  console.log(user);
 }
 test()
 
