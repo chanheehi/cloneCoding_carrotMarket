@@ -10,7 +10,6 @@ const FormSchema = z.object({
 })
 
 export async function login(prevState: unknown, formData: FormData) {
-  console.log(prevState, formData)
   const data = {
     email: formData.get("email"),
     password: formData.get("password")

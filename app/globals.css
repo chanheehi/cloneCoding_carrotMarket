@@ -5,6 +5,7 @@
 @layer components {
   .primary-btn {
     @apply w-full bg-orange-500 text-white text-lg font-medium py-2.5 rounded-md text-center hover:bg-orange-400 transition-colors;
+    @apply flex items-center justify-center;
   }
 }
 

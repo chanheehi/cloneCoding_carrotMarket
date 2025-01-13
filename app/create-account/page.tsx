@@ -8,7 +8,6 @@ import { createAccount } from "./actions";
 import { PASSWORD_MIN_LENGTH } from "@/lib/constants";
 
 export default function CreateAccount() {
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const [state, trigger] = useActionState(createAccount, null);
 
   return (

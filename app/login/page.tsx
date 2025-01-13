@@ -6,6 +6,10 @@ import SocailLogin from "@/components/social-login";
 import { useActionState } from "react";
 import { login } from "./actions";
 
+const initialState = {
+  token: false,
+}
+
 export default function Login() {
 
   const [state, trigger] = useActionState(login, null);

@@ -3,14 +3,17 @@ import { PrismaClient } from "@prisma/client";
 const db = new PrismaClient();
 
 async function test() {
-  const user = await db.user.create({
-    data: {
-      username: "chan",          // 필수 (유일해야 함)
+  const token = await db.sMSToken.findUnique({
+    where: {
+      id: 1,
     },
-  });
-  console.log(user);
-  console.log(user);
+    include: {
+      user: true,
+    }
+  })
+  console.log(token)
 }
-test()
+
+test();
 
 export default db
