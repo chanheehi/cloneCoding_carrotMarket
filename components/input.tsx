@@ -5,7 +5,6 @@ interface FormInputProps {
 }
 
 export default function Input({name, errors = [], ...rest}: FormInputProps & InputHTMLAttributes<HTMLInputElement>) {
-  console.log(rest)
   return (
     <div className="flex flex-col gap-2">
       <input
