@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/ban-ts-comment */
 "use server";
 import { z } from "zod";
 import { PASSWORD_REGEX } from "@/lib/constants";
@@ -52,7 +53,7 @@ const FormSchema = z.object({
   path: ["confirm_password"],
 })
 
-export async function createAccount(prevState: any, formData: FormData){
+export async function createAccount(prevState: unknown, formData: FormData){
   const data = {
     username: formData.get("username"),
     email: formData.get("email"),
@@ -77,12 +78,12 @@ export async function createAccount(prevState: any, formData: FormData){
     })
 
     console.log(process.env.COOKIES_PASSWORD)
-    //@ts-ignore
+    // @ts-ignore
     const cookie = await getIronSession(cookies(), {
       cookieName: "delicious-karrot",
       password: process.env.COOKIES_PASSWORD,
     })
-    //@ts-ignore
+    // @ts-ignore
     cookie.id = user.id
     await cookie.save()
 
