@@ -77,12 +77,14 @@ export async function createAccount(prevState: unknown, formData: FormData){
     })
 
     console.log(process.env.COOKIES_PASSWORD)
-    // @ts-expect-error
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     const cookie = await getIronSession(cookies(), {
       cookieName: "delicious-karrot",
       password: process.env.COOKIES_PASSWORD,
     })
-    // @ts-expect-error
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     cookie.id = user.id
     await cookie.save()
 
