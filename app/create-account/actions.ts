@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/ban-ts-comment */
 "use server";
 import { z } from "zod";
 import { PASSWORD_REGEX } from "@/lib/constants";
@@ -78,12 +77,12 @@ export async function createAccount(prevState: unknown, formData: FormData){
     })
 
     console.log(process.env.COOKIES_PASSWORD)
-    // @ts-ignore
+    // @ts-expect-error
     const cookie = await getIronSession(cookies(), {
       cookieName: "delicious-karrot",
       password: process.env.COOKIES_PASSWORD,
     })
-    // @ts-ignore
+    // @ts-expect-error
     cookie.id = user.id
     await cookie.save()
 
