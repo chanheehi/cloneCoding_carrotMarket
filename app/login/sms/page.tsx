@@ -3,7 +3,7 @@
 import FormButton from "@/components/btn";
 import Input from "@/components/input";
 import { useActionState } from "react";
-import { SmsLogin } from "./actions";
+import { smsLogIn } from "./actions";
 
 const initialState = {
   token: false,
@@ -11,7 +11,7 @@ const initialState = {
 };
 
 export default function SMSLogin() {
-  const [state, dispatch] = useActionState(SmsLogin, initialState);
+  const [state, dispatch] = useActionState(smsLogIn, initialState);
   return (
     <div className="flex flex-col gap-10 py-8 px-6">
       <div className="flex flex-col gap-2 *:font-medium">
@@ -27,6 +27,7 @@ export default function SMSLogin() {
             required
             min={100000}
             max={999999}
+            errors={state.error?.formErrors}
           />
         ) : (
           <Input

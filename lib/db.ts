@@ -5,7 +5,7 @@ const db = new PrismaClient();
 async function test() {
   const token = await db.sMSToken.findUnique({
     where: {
-      id: 1,
+      id: 2,
     },
     include: {
       user: true,
