@@ -1,68 +1,102 @@
 "use server";
-import { z } from "zod";
-import { PASSWORD_REGEX } from "@/lib/constants";
-import { PrismaClient } from "@prisma/client";
 import bcrypt from "bcrypt";
-import { getIronSession, SessionOptions } from "iron-session";
+import {
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_REGEX,
+  PASSWORD_REGEX_ERROR,
+} from "@/lib/constants";
+import db from "@/lib/db";
+import { z } from "zod";
+import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 import { redirect } from "next/navigation";
+import getSession from "@/lib/session";
+
+const checkUsername = (username: string) => !username.includes("potato");
+
+const checkPasswords = ({
+  password,
+  confirm_password,
+}: {
+  password: string;
+  confirm_password: string;
+}) => password === confirm_password;
 
 
-const db = new PrismaClient();
-
-const check_UniqueUserName = async (username: string) => {
-  const findUser = await db.user.findUnique({
-    where: {
-      username
-    },
-    select: {
-      id: true,
+const formSchema = z
+  .object({
+    username: z
+      .string({
+        invalid_type_error: "Username must be a string!",
+        required_error: "Where is my username???",
+      })
+      .toLowerCase()
+      .trim()
+      // .transform((username) => `🔥 ${username} 🔥`)
+      .refine(checkUsername, "No potatoes allowed!"),
+    email: z
+      .string()
+      .email()
+      .toLowerCase(),
+    password: z.string().min(PASSWORD_MIN_LENGTH),
+    //.regex(PASSWORD_REGEX, PASSWORD_REGEX_ERROR),
+    confirm_password: z.string().min(PASSWORD_MIN_LENGTH),
+  })
+  .superRefine(async ( data , ctx) => {
+    const user = await db.user.findUnique({
+      where: {
+        username: data.username,
+      },
+      select: {
+        id: true,
+      },
+    })
+    // 유저가 이미 존재하면 오류 출력
+    if (user) {
+      ctx.addIssue({
+        code: "custom",
+        message: "이미 존재하는 이름입니다",
+        path: ["username"],
+        fatal: true,
+      })
     }
+    return z.NEVER;
   })
-
-  // 유저 이름이 이미 존재하는지 확인한 값을 반환
-  return !Boolean(findUser)
-}
-
-const checkPasswords = ({password,
-  confirm_password} : {password: string,
-  confirm_password:string
-}) => password === confirm_password
-
-const check_UniqueEmail = async (email: string) => {
-  const find_UserEmail = await db.user.findUnique({
-    where: {
-      email,
-    },
-    select: {
-      id: true,
-    },
+  .superRefine(async ( data , ctx) => {
+    const user = await db.user.findUnique({
+      where: {
+        email: data.email,
+      },
+      select: {
+        id: true,
+      },
+    })
+    // 유저가 이미 존재하면 오류 출력
+    if (user) {
+      ctx.addIssue({
+        code: "custom",
+        message: "이미 존재하는 이메일입니다",
+        path: ["email"],
+        fatal: true,
+      })
+    }
+    return z.NEVER;
   })
+  .refine(checkPasswords, {
+    message: "Both passwords should be the same!",
+    path: ["confirm_password"],
+  });
 
-  return !Boolean(find_UserEmail)
-}
-
-const FormSchema = z.object({
-  username: z.string().trim().min(3, "유저명이 너무 짧아요").max(10, "유저명이 너무 길어요").refine(check_UniqueUserName, "이미 존재하는 이름이에요"),
-  email: z.string().email().toLowerCase().refine(check_UniqueEmail, "이미 존재하는 이메일이에요"),
-  password: z.string().min(10).regex(PASSWORD_REGEX, "영어 대문자와 소문자가 한글자 이상 포함되어야합니다."),
-  confirm_password: z.string().min(10),
-}).refine(checkPasswords, {
-  message: "비밀번호가 서로 달라요",
-  path: ["confirm_password"],
-})
-
-export async function createAccount(prevState: unknown, formData: FormData){
+export async function createAccount(prevState: any, formData: FormData) {
   const data = {
     username: formData.get("username"),
     email: formData.get("email"),
     password: formData.get("password"),
     confirm_password: formData.get("confirm_password"),
   };
-
-  const result = await FormSchema.safeParseAsync(data);
+  const result = await formSchema.spa(data);
   if (!result.success) {
-    return result.error.flatten()
+    return result.error.flatten();
   } else {
     const hashedPassword = await bcrypt.hash(result.data.password, 12);
     const user = await db.user.create({
@@ -74,21 +108,10 @@ export async function createAccount(prevState: unknown, formData: FormData){
       select: {
         id: true,
       },
-    })
-
-    console.log(process.env.COOKIES_PASSWORD)
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    const cookie = await getIronSession(cookies(), {
-      cookieName: "delicious-karrot",
-      password: process.env.COOKIES_PASSWORD,
-    })
-    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-    // @ts-ignore
-    cookie.id = user.id
-    await cookie.save()
-
-    redirect("/profile")
-
+    });
+    const session = await getSession();
+    session.id = user.id;
+    await session.save();
+    redirect("/profile");
   }
 }
